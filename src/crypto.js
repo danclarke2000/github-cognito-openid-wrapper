@@ -20,7 +20,9 @@ module.exports = {
       iss: `https://${host}`,
       aud: GITHUB_CLIENT_ID,
     };
-    logger.debug('Signing payload %j', enrichedPayload, {});
+
+    let msg = `Signing payload ${JSON.stringify(enrichedPayload)}, host=${host}`;
+    logger.debug(msg);
     return jwt.sign(enrichedPayload, cert, {
       expiresIn: '1h',
       algorithm: 'RS256',

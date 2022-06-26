@@ -37,8 +37,16 @@ module.exports = {
     }),
 
   getIssuer: (host, stage) => {
-    const lStage = stage;
-    const issuer = `${host}/${lStage}`;
+    let issuer;
+    if (host.includes('amazonaws')) {
+        // include stage so the urls resulting from discovery will be something like 
+        // https://ub9dlyuc39.execute-api.eu-west-1.amazonaws.com/githubGithuf9DPLUJtcCgL
+        issuer = `${host}/${stage}`;
+    } else {
+        // custom dns that should incorporate the stage
+        issuer = `${host}`;
+    }
+
     return issuer;
   },
 };

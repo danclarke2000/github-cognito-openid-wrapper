@@ -17,7 +17,7 @@ if [ ! -f "$PROJECT_ROOT/config.sh" ]; then
 fi
 source ./config.sh
 
-
+BUCKET_NAME=aws-sam-cli-github-cognito-openid-wrapperInfo
 OUTPUT_TEMPLATE_FILE="$PROJECT_ROOT/serverless-output.yml"
 aws s3 mb "s3://$BUCKET_NAME" --region "$REGION" || true
 sam package --template-file template.yml --output-template-file "$OUTPUT_TEMPLATE_FILE"  --s3-bucket "$BUCKET_NAME"

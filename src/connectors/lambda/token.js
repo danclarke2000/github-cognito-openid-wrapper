@@ -2,6 +2,7 @@ const qs = require('querystring');
 const responder = require('./util/responder');
 const auth = require('./util/auth');
 const controllers = require('../controllers');
+const logger = require('../logger');
 
 const parseBody = (event) => {
   const contentType = event.headers['Content-Type'];
@@ -23,6 +24,7 @@ module.exports.handler = (event, context, callback) => {
   const code = body.code || query.code;
   const state = body.state || query.state;
 
+  
   controllers(responder(callback)).token(
     code,
     state,

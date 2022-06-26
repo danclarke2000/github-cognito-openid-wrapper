@@ -9,8 +9,7 @@ module.exports = (respond) => ({
       state,
       response_type
     );
-    logger.info('Redirecting to authorizeUrl');
-    logger.debug('Authorize Url is: %s', authorizeUrl, {});
+    logger.info(`Redirecting to authorizeUrl=${authorizeUrl}`);
     respond.redirect(authorizeUrl);
   },
   userinfo: (tokenPromise) => {
@@ -31,6 +30,8 @@ module.exports = (respond) => ({
   },
   token: (code, state, host) => {
     if (code) {
+      logger.debug(
+        'Requuesting Token for (%s, %s, %s)', code, state, host, {});
       openid
         .getTokens(code, state, host)
         .then((tokens) => {

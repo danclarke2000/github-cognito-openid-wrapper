@@ -1,6 +1,7 @@
 const responder = require('./responder');
 const auth = require('./auth');
 const controllers = require('../controllers');
+const logger = require('../logger');
 
 module.exports = {
   userinfo: (req, res) => {
@@ -18,8 +19,9 @@ module.exports = {
       `https://github.com/login/oauth/authorize?client_id=${req.query.client_id}&scope=${req.query.scope}&state=${req.query.state}&response_type=${req.query.response_type}`
     ),
   openIdConfiguration: (req, res) => {
-    controllers(responder(res)).openIdConfiguration(
-      auth.getIssuer(req.get('host'))
-    );
+    let hdrHost = req.get('host');
+    let authIssuer = auth.getIssuer(hdrHost);
+    logger.info(`openIdConfiguration hdrHost=${hdrHost} authIssuer=${authIssuer}`);
+    controllers(responder(res)).openIdConfiguration(authIssuer);
   },
 };
