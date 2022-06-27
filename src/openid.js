@@ -2,8 +2,19 @@ const logger = require('./connectors/logger');
 const { NumericDate } = require('./helpers');
 const crypto = require('./crypto');
 const github = require('./github');
+const { promInitConfig } = require('./config');
 
-const getJwks = () => ({ keys: [crypto.getPublicKey()] });
+let myConfig2 = undefined;
+promInitConfig.then( (value) => {
+    myConfig2 = value;
+}, (err) => {
+    logger.error(`openid.js promInitConfig ${err}`);
+});
+
+const getJwks = () => {
+    logger.debug('getJwks');
+    return { keys: [crypto.getPublicKey()] }
+};
 
 const getUserInfo = (accessToken) =>
   Promise.all([
@@ -58,44 +69,45 @@ const getAuthorizeUrl = (client_id, scope, state, response_type) =>
   github().getAuthorizeUrl(client_id, scope, state, response_type);
 
 const getTokens = (code, state, host) =>
-  github()
-    .getToken(code, state)
-    .then((githubToken) => {
-      logger.debug('Got token: %s', githubToken, {});
-      // GitHub returns scopes separated by commas
-      // But OAuth wants them to be spaces
-      // https://tools.ietf.org/html/rfc6749#section-5.1
-      // Also, we need to add openid as a scope,
-      // since GitHub will have stripped it
-      const scope = `openid ${githubToken.scope.replace(',', ' ')}`;
+  promInitConfig.then((value) => {
+    return github()
+        .getToken(code, state)
+        .then((githubToken) => {
+            logger.debug(`openid.js!getTokens - Got token: ${JSON.stringify(githubToken)}`);
+            // GitHub returns scopes separated by commas
+            // But OAuth wants them to be spaces
+            // https://tools.ietf.org/html/rfc6749#section-5.1
+            // Also, we need to add openid as a scope,
+            // since GitHub will have stripped it
+            const scope = `openid ${githubToken.scope.replace(',', ' ')}`;
 
-      // ** JWT ID Token required fields **
-      // iss - issuer https url
-      // aud - audience that this token is valid for (GITHUB_CLIENT_ID)
-      // sub - subject identifier - must be unique
-      // ** Also required, but provided by jsonwebtoken **
-      // exp - expiry time for the id token (seconds since epoch in UTC)
-      // iat - time that the JWT was issued (seconds since epoch in UTC)
+            // ** JWT ID Token required fields **
+            // iss - issuer https url
+            // aud - audience that this token is valid for (GITHUB_CLIENT_ID)
+            // sub - subject identifier - must be unique
+            // ** Also required, but provided by jsonwebtoken **
+            // exp - expiry time for the id token (seconds since epoch in UTC)
+            // iat - time that the JWT was issued (seconds since epoch in UTC)
 
-      return new Promise((resolve) => {
-        const payload = {
-          // This was commented because Cognito times out in under a second
-          // and generating the userInfo takes too long.
-          // It means the ID token is empty except for metadata.
-          //  ...userInfo,
-        };
+            return new Promise((resolve) => {
+                const payload = {
+                // This was commented because Cognito times out in under a second
+                // and generating the userInfo takes too long.
+                // It means the ID token is empty except for metadata.
+                //  ...userInfo,
+                };
 
-        const idToken = crypto.makeIdToken(payload, host);
-        const tokenResponse = {
-          ...githubToken,
-          scope,
-          id_token: idToken,
-        };
+                const idToken = crypto.makeIdToken(payload, host);
+                const tokenResponse = {
+                ...githubToken,
+                scope,
+                id_token: idToken,
+                };
 
-        logger.debug('Resolved token response: %j', tokenResponse, {});
-
-        resolve(tokenResponse);
-      });
+                logger.debug('Resolved token response', {});
+                resolve(tokenResponse);
+            });
+        });
     });
 
 const getConfigFor = (host) => ({

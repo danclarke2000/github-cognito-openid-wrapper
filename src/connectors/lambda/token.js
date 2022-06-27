@@ -1,8 +1,9 @@
 const qs = require('querystring');
-const responder = require('./util/responder');
+const responderasync = require('./util/responderasync');
 const auth = require('./util/auth');
 const controllers = require('../controllers');
 const logger = require('../logger');
+const { promInitConfig } = require('../../config');
 
 const parseBody = (event) => {
   const contentType = event.headers['Content-Type'];
@@ -17,20 +18,32 @@ const parseBody = (event) => {
   return {};
 };
 
-module.exports.handler = (event, context, callback) => {
-  const body = parseBody(event);
-  const query = event.queryStringParameters || {};
+module.exports.handler = async (event, context) => {
+    logger.debug(`tokenHandler ${JSON.stringify(event)}`); 
+    const body = parseBody(event);
+    const query = event.queryStringParameters || {};
 
-  const code = body.code || query.code;
-  const state = body.state || query.state;
+    const code = body.code || query.code;
+    const state = body.state || query.state;
+    
+    let newProm = new Promise((resolve,reject) => {
+        let iss = auth.getIssuer(
+            event.headers.Host,
+            event.requestContext && event.requestContext.stage
+        )
+        promInitConfig.then( (value) => {
+            logger.debug(`tokenHandler code=${code} state=${state} iss=${iss}`); 
+            controllers(responderasync(resolve)).token(
+                code,
+                state,
+                iss 
+            );
+        }, (err) => {
+            let msg = `token.handler; ${err}`;
+            logger.error(msg); 
+            reject(msg)
+        });
+    });
 
-  
-  controllers(responder(callback)).token(
-    code,
-    state,
-    auth.getIssuer(
-      event.headers.Host,
-      event.requestContext && event.requestContext.stage
-    )
-  );
+    return newProm;
 };

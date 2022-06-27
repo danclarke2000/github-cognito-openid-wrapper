@@ -1,9 +1,10 @@
 const logger = require('../../logger');
 
-module.exports = (callback) => ({
+module.exports = (promResolver) => ({
   success: (response) => {
     logger.info('Success response');
-    callback(null, {
+    logger.debug('Response was: ', response);
+    promResolver({
       statusCode: 200,
       body: JSON.stringify(response),
       headers: {
@@ -13,7 +14,7 @@ module.exports = (callback) => ({
   },
   error: (err) => {
     logger.error('Error response: ', err.message || err);
-    callback(null, {
+    promResolver({
       statusCode: 400,
       body: JSON.stringify(err.message),
       headers: {
@@ -23,8 +24,8 @@ module.exports = (callback) => ({
   },
   redirect: (url) => {
     logger.info('Redirect response');
-    logger.debug('Redirect response to %s', url, {});
-    callback(null, {
+    logger.debug('Redirect response to ', url, {});
+    promResolver({
       statusCode: 302,
       headers: {
         Location: url,

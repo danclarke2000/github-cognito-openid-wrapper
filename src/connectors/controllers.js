@@ -3,6 +3,7 @@ const openid = require('../openid');
 
 module.exports = (respond) => ({
   authorize: (client_id, scope, state, response_type) => {
+    logger.debug(`controllers.authorize client_id=${client_id}, scope=${scope}, state=${state}, response_type=${response_type}`);
     const authorizeUrl = openid.getAuthorizeUrl(
       client_id,
       scope,
@@ -35,25 +36,17 @@ module.exports = (respond) => ({
       openid
         .getTokens(code, state, host)
         .then((tokens) => {
-          logger.debug(
-            'Token for (%s, %s, %s) provided',
-            code,
-            state,
-            host,
-            {}
-          );
-          respond.success(tokens);
+            logger.debug(`controllers.js!token return `);
+            logger.debug('Token for (%s, %s, %s) provided',
+                code, state, host, {});
+            respond.success(tokens);
         })
         .catch((error) => {
-          logger.error(
-            'Token for (%s, %s, %s) failed: %s',
-            code,
-            state,
-            host,
-            error.message || error,
-            {}
-          );
-          respond.error(error);
+            logger.error(
+                'Token for (%s, %s, %s) failed: %s',
+                code, state, host,
+                error.message || error, {});
+            respond.error(error);
         });
     } else {
       const error = new Error('No code supplied');
@@ -75,7 +68,7 @@ module.exports = (respond) => ({
   },
   openIdConfiguration: (host) => {
     const config = openid.getConfigFor(host);
-    logger.info('Providing configuration for %s: %j', host, config, {});
+    logger.debug('Providing configuration for %s: %j', host, config, {});
     respond.success(config);
   },
 });

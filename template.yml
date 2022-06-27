@@ -3,31 +3,52 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
     Github Cognito OpenID Wrapper (SSO)
 
+Mappings:
+  Tags:
+    Global:
+      ProjectId: 'gitrospect_githubopenidwrapper'
+  Lambda:
+    stg:
+      SecretName: 'gitrospectgithuboidcwrapper/stg/oidcsecrets'
+      SubDomainForIdpGithubWrapper: 'idpgithubstg'
+      NODEENV: 'development'
+    prd:
+      SecretName: 'gitrospectgithuboidcwrapper/prd/oidcsecrets'
+      SubDomainForIdpGithubWrapper: 'idpgithubprd'
+      NODEENV: 'production'
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Runtime: nodejs14.x
+    Runtime: nodejs16.x
     Timeout: 15
+    Architectures:
+      - arm64
     Environment:
       Variables:
-        GITHUB_CLIENT_ID:
-          Ref: GitHubClientIdParameter
-        GITHUB_CLIENT_SECRET:
-          Ref: GitHubClientSecretParameter
-        COGNITO_REDIRECT_URI:
-          Ref: CognitoRedirectUriParameter
         GITHUB_API_URL:
           Ref: GitHubUrlParameter
         GITHUB_LOGIN_URL:
           Ref: GitHubLoginUrlParameter
-
+        NODE_ENV: !FindInMap 
+          - Lambda
+          - !Ref MyDeployEnv
+          - NODEENV
+        SecretName: !FindInMap 
+          - Lambda
+          - !Ref MyDeployEnv
+          - SecretName
+        Stage: !Ref MyDeployEnv
+    Tags:
+        Project: !FindInMap [Tags, Global, ProjectId]
+    
 Parameters:
-  GitHubClientIdParameter:
+  MyDeployEnv:
     Type: String
-  GitHubClientSecretParameter:
-    Type: String
-  CognitoRedirectUriParameter:
-    Type: String
+    Default: stg
+    AllowedValues:
+      - stg
+      - prd
   GitHubUrlParameter:
     Type: String
     Default: "https://api.github.com"
@@ -36,89 +57,140 @@ Parameters:
     Type: String
     Default: "https://github.com"
     MinLength: 1
-  StageNameParameter:
+  GithubCognitoWrapperLambdaRoleArn:
+    Type: String
+  MyCertificateArnEUWest1:
+    Type: String
+  MyCertificateArnUSeast1:
+    Type: String
+  MyRoute53HostedZoneId:
+    Type: String
+  MyRoute53Domain:
     Type: String
 
-Resources:
-  GithubOAuthApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref StageNameParameter
-      OpenApiVersion: "2.0"
+#
+# These values parameters are now passed via aws secret manager instead of via the yml
+#  GITHUB_CLIENT_ID)
+#  GITHUB_CLIENT_SECRET: 
+#  COGNITO_REDIRECT_URI:
+
+Resources: 
+  GithubOIDCWrapperSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Description: String
+      SecretString: '{
+          "GITHUB_CLIENT_ID": "",
+          "GITHUB_CLIENT_SECRET": "",
+          "COGNITO_REDIRECT_URI": "",
+          "B64_JWT_KEY_PUBLIC": "",
+          "B64_JWT_KEY_PRIVATE": ""
+        }'
+      Name: !FindInMap [Lambda, !Ref MyDeployEnv, SecretName]      
+      Tags: 
+        - 
+          Key: Project
+          Value: !FindInMap [Tags, Global, ProjectId]
+
+  #
+  # these slows down deployment too much so instead create the domain by hand via api gateway custom domains 
+  # GithubOAuthApi:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     Name: !Sub idpgithub-${MyDeployEnv}-${MyIterIncrement}
+  #     StageName: !Ref MyDeployEnv
+  #     OpenApiVersion: "2.0"
+  #     Domain:
+  #       DomainName: !Sub 
+  #         - '${Prefix}.${MyRoute53Domain}'
+  #         - Prefix: !FindInMap [Lambda, !Ref MyDeployEnv, SubDomainForIdpGithubWrapper]
+  #       CertificateArn: !Ref MyCertificateArnUSeast1
+  #       EndpointConfiguration: EDGE
+  #       SecurityPolicy: TLS_1_2
+  #       Route53:
+  #         HostedZoneId: !Ref MyRoute53HostedZoneId
+  #       schemes: https
+
   OpenIdDiscovery:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
       Handler: openIdConfiguration.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-openIdConfiguration
       Events:
         GetResource:
           Type: Api
           Properties:
             Path: /.well-known/openid-configuration
             Method: get
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
   Authorize:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
       Handler: authorize.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-authorize
       Events:
         GetResource:
           Type: Api
           Properties:
             Path: /authorize
             Method: get
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
   Token:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
       Handler: token.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-token
       Events:
         GetResource:
           Type: Api
           Properties:
             Path: /token
             Method: get
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
         PostResource:
           Type: Api
           Properties:
             Path: /token
             Method: post
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
   UserInfo:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
       Handler: userinfo.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-userinfo
       Events:
         GetResource:
           Type: Api
           Properties:
             Path: /userinfo
             Method: get
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
         PostResource:
           Type: Api
           Properties:
             Path: /userinfo
             Method: post
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
   Jwks:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
       Handler: jwks.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-jwks
       Events:
         GetResource:
           Type: Api
           Properties:
             Path: /.well-known/jwks.json
             Method: get
-            RestApiId: !Ref GithubOAuthApi
+            # RestApiId: !Ref GithubOAuthApi
 
-Outputs:
-    GitHubShimIssuer:
-      Description: "GitHub OpenID Shim Issuer"
-      Value: !Sub "https://${GithubOAuthApi}.execute-api.${AWS::Region}.amazonaws.com/${StageNameParameter}"

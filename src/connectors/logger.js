@@ -1,4 +1,11 @@
 const winston = require('winston');
+
+const logger = winston.createLogger({
+    level: 'info',
+  });
+
+  
+/*
 const {
   SPLUNK_URL,
   SPLUNK_TOKEN,
@@ -7,9 +14,6 @@ const {
   SPLUNK_INDEX,
 } = require('../config');
 
-const logger = winston.createLogger({
-  level: 'info',
-});
 
 // Activate Splunk logging if Splunk's env variables are set
 if (SPLUNK_URL) {
@@ -33,7 +37,7 @@ if (SPLUNK_URL) {
       ),
     })
   );
-} else {
+} else { */
   // STDOUT logging for dev/regular servers
   logger.add(
     new winston.transports.Console({
@@ -44,6 +48,8 @@ if (SPLUNK_URL) {
       ),
     })
   );
-}
+
+  /*
+} */
 
 module.exports = logger;

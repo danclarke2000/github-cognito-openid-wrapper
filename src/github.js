@@ -1,22 +1,32 @@
 const axios = require('axios');
-const {
-  GITHUB_CLIENT_ID,
-  GITHUB_CLIENT_SECRET,
-  COGNITO_REDIRECT_URI,
-  GITHUB_API_URL,
-  GITHUB_LOGIN_URL,
-} = require('./config');
 const logger = require('./connectors/logger');
+const { promInitConfig, myconfig, syncGetConfig } = require('./config');
+
+let myConfig2 = undefined;
+promInitConfig.then( (value) => {
+    logger.info(`github.js;promInitConfig setting value}`);
+    myConfig2 = value;
+}, (err) => {
+    logger.error(`github.js promInitConfig ${err}`);
+});
 
 const getApiEndpoints = (
-  apiBaseUrl = GITHUB_API_URL,
-  loginBaseUrl = GITHUB_LOGIN_URL
-) => ({
-  userDetails: `${apiBaseUrl}/user`,
-  userEmails: `${apiBaseUrl}/user/emails`,
-  oauthToken: `${loginBaseUrl}/login/oauth/access_token`,
-  oauthAuthorize: `${loginBaseUrl}/login/oauth/authorize`,
-});
+  apiBaseUrl,
+  loginBaseUrl
+) => 
+{
+    apiBaseUrl = myConfig2?.GITHUB_API_URL;
+    loginBaseUrl = myConfig2?.GITHUB_LOGIN_URL;
+    logger.debug(`getApiEndpoints2 apiBaseUrl=${apiBaseUrl}, loginBaseUrl=${loginBaseUrl}`);
+    let r = {
+        userDetails: `${apiBaseUrl}/user`,
+        userEmails: `${apiBaseUrl}/user/emails`,
+        oauthToken: `${loginBaseUrl}/login/oauth/access_token`,
+        oauthAuthorize: `${loginBaseUrl}/login/oauth/authorize`,
+    }
+
+    return r;
+};
 
 const check = (response) => {
   logger.debug('Checking response: %j', response, {});
@@ -59,11 +69,11 @@ module.exports = (apiBaseUrl, loginBaseUrl) => {
       const data = {
         // OAuth required fields
         grant_type: 'authorization_code',
-        redirect_uri: COGNITO_REDIRECT_URI,
-        client_id: GITHUB_CLIENT_ID,
+        redirect_uri: myConfig2.COGNITO_REDIRECT_URI,
+        client_id: myConfig2.GITHUB_CLIENT_ID,
         // GitHub Specific
         response_type: 'code',
-        client_secret: GITHUB_CLIENT_SECRET,
+        client_secret: myConfig2.GITHUB_CLIENT_SECRET,
         code,
         // State may not be present, so we conditionally include it
         ...(state && { state }),
