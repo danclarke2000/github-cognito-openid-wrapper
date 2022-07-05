@@ -30,7 +30,7 @@ module.exports.handler = async (event, context) => {
         let iss = auth.getIssuer(
             event.headers.Host,
             event.requestContext && event.requestContext.stage
-        )
+        );
         promInitConfig.then( (value) => {
             logger.debug(`tokenHandler code=${code} state=${state} iss=${iss}`); 
             controllers(responderasync(resolve)).token(

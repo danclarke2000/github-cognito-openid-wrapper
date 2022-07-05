@@ -1,10 +1,9 @@
 const winston = require('winston');
 
 const logger = winston.createLogger({
-    level: 'info',
+    level: (process.env.DebugLevel) ? process.env.DebugLevel : 'info',
   });
 
-  
 /*
 const {
   SPLUNK_URL,

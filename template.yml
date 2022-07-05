@@ -12,10 +12,14 @@ Mappings:
       SecretName: 'gitrospectgithuboidcwrapper/stg/oidcsecrets'
       SubDomainForIdpGithubWrapper: 'idpgithubstg'
       NODEENV: 'development'
+      ALBLOGINURL: 'https://apis.gitrospect.com/pubapi/login'
+      IDPURL: 'https://idpstg.gitrospect.com/oauth2/idpresponse'
     prd:
       SecretName: 'gitrospectgithuboidcwrapper/prd/oidcsecrets'
       SubDomainForIdpGithubWrapper: 'idpgithubprd'
       NODEENV: 'production'
+      ALBLOGINURL: 'https://apip.gitrospect.com/pubapi/login'
+      IDPURL: 'https://idpp.gitrospect.com/oauth2/idpresponse'
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -26,6 +30,14 @@ Globals:
       - arm64
     Environment:
       Variables:
+        ALB_LOGIN_URL: !FindInMap 
+          - Lambda
+          - !Ref MyDeployEnv
+          - ALBLOGINURL
+        IDP_URL: !FindInMap 
+          - Lambda
+          - !Ref MyDeployEnv
+          - IDPURL
         GITHUB_API_URL:
           Ref: GitHubUrlParameter
         GITHUB_LOGIN_URL:
@@ -39,6 +51,7 @@ Globals:
           - !Ref MyDeployEnv
           - SecretName
         Stage: !Ref MyDeployEnv
+        DebugLevel: debug
     Tags:
         Project: !FindInMap [Tags, Global, ProjectId]
     
@@ -191,6 +204,20 @@ Resources:
           Type: Api
           Properties:
             Path: /.well-known/jwks.json
+            Method: get
+            # RestApiId: !Ref GithubOAuthApi
+  GithubpostauthCallback:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
+      Handler: githubpostauthcallback.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-githubpostauthcallback
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /githubpostauthcallback
             Method: get
             # RestApiId: !Ref GithubOAuthApi
 
