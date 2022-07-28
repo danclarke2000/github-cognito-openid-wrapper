@@ -28,8 +28,32 @@ const getApiEndpoints = (
     return r;
 };
 
+const checkOauthToken = (response) => {
+    let respKeys = Object.keys(response);
+    let respHdrs = response.headers ? JSON.stringify(response.headers) : 'no headers';
+    let respData = response.data ? JSON.stringify(response.data) : 'no data';
+    logger.debug(`checkOauthToken: Checking response: status=${response.status} respHdrs=${respHdrs} respData=${respData}`, {});
+    return check(response);
+}
+
+const checkUserDetails = (response) => {
+    let respKeys = Object.keys(response);
+    let respHdrs = response.headers ? JSON.stringify(response.headers) : 'no headers';
+    let respData = response.data ? JSON.stringify(response.data) : 'no data';
+    logger.debug(`checkUserDetails: Checking response: status=${response.status} respHdrs=${respHdrs} respData=${respData}`, {});
+    return check(response);
+}
+
+const checkUserEmails = (response) => {
+    let respKeys = Object.keys(response);
+    let respHdrs = response.headers ? JSON.stringify(response.headers) : 'no headers';
+    let respData = response.data ? JSON.stringify(response.data) : 'no data';    
+    logger.debug(`checkUserEmails: Checking response: status=${response.status} respHdrs=${respHdrs} respData=${respData}`, {});
+    return check(response);
+}
+
 const check = (response) => {
-  logger.debug('Checking response: %j', response, {});
+  
   if (response.data) {
     if (response.data.error) {
       throw new Error(
@@ -62,9 +86,11 @@ module.exports = (apiBaseUrl, loginBaseUrl) => {
         scope
       )}&state=${state}&response_type=${response_type}`,
     getUserDetails: (accessToken) =>
-      gitHubGet(urls.userDetails, accessToken).then(check),
+      gitHubGet(urls.userDetails, accessToken).then(checkUserDetails),
     getUserEmails: (accessToken) =>
-      gitHubGet(urls.userEmails, accessToken).then(check),
+      gitHubGet(urls.userEmails, accessToken).then(checkUserEmails),
+    getUserMembershipOrgs: (accessToken) => 
+        gitHubGet('https://api.github.com/user/memberships/orgs', accessToken).then(check),
     getToken: (code, state) => {
       const data = {
         // OAuth required fields
@@ -93,7 +119,7 @@ module.exports = (apiBaseUrl, loginBaseUrl) => {
           'Content-Type': 'application/json',
         },
         data,
-      }).then(check);
+      }).then(checkOauthToken);
     },
   };
 };

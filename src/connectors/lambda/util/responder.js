@@ -23,7 +23,7 @@ module.exports = (callback) => ({
   },
   redirect: (url) => {
     logger.info('Redirect response');
-    logger.debug('Redirect response to %s', url, {});
+    logger.debug('Redirect response to %s ',  url.toString(), {});
     callback(null, {
       statusCode: 302,
       headers: {

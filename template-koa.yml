@@ -6,20 +6,20 @@ Description: >
 Mappings:
   Tags:
     Global:
-      ProjectId: 'gitrospect_githubopenidwrapper'
+      ProjectId: 'githubapp2_githubopenidwrapper'
   Lambda:
     stg:
-      SecretName: 'gitrospectgithuboidcwrapper/stg/oidcsecrets'
+      SecretName: 'githubapp2cognitooidcwrapperforgithub/stg/oidcsecrets'
       SubDomainForIdpGithubWrapper: 'idpgithubstg'
       NODEENV: 'development'
-      ALBLOGINURL: 'https://apis.gitrospect.com/pubapi/login'
-      IDPURL: 'https://idpstg.gitrospect.com/oauth2/idpresponse'
+      ALBLOGINURL: 'https://githubapp2apis.soc2tools.com/pubapi/login'
+      IDPURL: 'https://githubapp2idps.soc2tools.com/oauth2/idpresponse'
     prd:
-      SecretName: 'gitrospectgithuboidcwrapper/prd/oidcsecrets'
+      SecretName: 'githubapp2cognitooidcwrapperforgithub/prd/oidcsecrets'
       SubDomainForIdpGithubWrapper: 'idpgithubprd'
       NODEENV: 'production'
-      ALBLOGINURL: 'https://apip.gitrospect.com/pubapi/login'
-      IDPURL: 'https://idpp.gitrospect.com/oauth2/idpresponse'
+      ALBLOGINURL: 'https://githubapp2apip.gitrospect.com/pubapi/login'
+      IDPURL: 'https://githubapp2idpp.soc2tools.com/oauth2/idpresponse'
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -52,6 +52,8 @@ Globals:
           - SecretName
         Stage: !Ref MyDeployEnv
         DebugLevel: debug
+        DynameDbTableForGithubState: 'githubapp2-cogcbs-stg-githubidpstate'
+        
     Tags:
         Project: !FindInMap [Tags, Global, ProjectId]
     
@@ -105,24 +107,6 @@ Resources:
           Key: Project
           Value: !FindInMap [Tags, Global, ProjectId]
 
-  #
-  # these slows down deployment too much so instead create the domain by hand via api gateway custom domains 
-  # GithubOAuthApi:
-  #   Type: AWS::Serverless::Api
-  #   Properties:
-  #     Name: !Sub idpgithub-${MyDeployEnv}-${MyIterIncrement}
-  #     StageName: !Ref MyDeployEnv
-  #     OpenApiVersion: "2.0"
-  #     Domain:
-  #       DomainName: !Sub 
-  #         - '${Prefix}.${MyRoute53Domain}'
-  #         - Prefix: !FindInMap [Lambda, !Ref MyDeployEnv, SubDomainForIdpGithubWrapper]
-  #       CertificateArn: !Ref MyCertificateArnUSEast1
-  #       EndpointConfiguration: EDGE
-  #       SecurityPolicy: TLS_1_2
-  #       Route53:
-  #         HostedZoneId: !Ref MyRoute53HostedZoneId
-  #       schemes: https
 
   OpenIdDiscovery:
     Type: AWS::Serverless::Function
@@ -220,4 +204,11 @@ Resources:
             Path: /githubpostauthcallback
             Method: get
             # RestApiId: !Ref GithubOAuthApi
+  AppTestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./dist-lambda
+      Role: !Ref GithubCognitoWrapperLambdaRoleArn
+      Handler: apptestfunction.handler
+      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-apptestfunction
 

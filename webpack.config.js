@@ -40,7 +40,8 @@ const config = [
       userinfo: './src/connectors/lambda/userinfo.js',
       jwks: './src/connectors/lambda/jwks.js',
       authorize: './src/connectors/lambda/authorize.js',
-      githubpostauthcallback: './src/connectors/lambda/githubpostauthcallback.js'
+      githubpostauthcallback: './src/connectors/lambda/githubpostauthcallback.js',
+      apptestfunction: './src/connectors/lambda/apptestfunction.js'
     }
   },
   {

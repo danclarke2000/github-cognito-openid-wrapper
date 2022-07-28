@@ -24,7 +24,7 @@ module.exports = (promResolver) => ({
   },
   redirect: (url) => {
     logger.info('Redirect response');
-    logger.debug('Redirect response to ', url, {});
+    logger.debug('Redirect response to ', url.toString(), {});
     promResolver({
       statusCode: 302,
       headers: {

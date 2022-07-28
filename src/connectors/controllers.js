@@ -32,11 +32,11 @@ module.exports = (respond) => ({
   token: (code, state, host) => {
     if (code) {
       logger.debug(
-        'Requuesting Token for (%s, %s, %s)', code, state, host, {});
+        'Requesting Token for (%s, %s, %s)', code, state, host, {});
       openid
         .getTokens(code, state, host)
         .then((tokens) => {
-            logger.debug(`controllers.js!token return `);
+            logger.debug(`controllers.js!token return ${JSON.stringify(tokens)}`);
             logger.debug('Token for (%s, %s, %s) provided',
                 code, state, host, {});
             respond.success(tokens);
