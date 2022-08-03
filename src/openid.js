@@ -156,9 +156,14 @@ const getTokens = (code, state, host) =>
                         logger.debug(`openid.js!Promise.all body - isArray(values)=${Array.isArray(values)} arrLen=${Array.isArray(values) ? values.length : -1 },  Object.keys=${Object.keys}`);
                         
                         let valueMemberships = values[0].data;                        
-                        if (Array.isArray(valueMemberships) && 0 < valueMemberships.length) {
-                            dydbItemPayload.githubOrgs = valueMemberships.map(el => el.organization.login)
-                            logger.debug(`openid.js!promGithubUserMemberships - value=${JSON.stringify(dydbItemPayload.githubOrgs)}`);                                                    
+                        if (Array.isArray(valueMemberships))
+                        {
+                            if (0 < valueMemberships.length) {
+                                dydbItemPayload.githubOrgs = valueMemberships.map(el => el.organization.login)
+                            } else {
+                                logger.debug(`openid.js!promGithubUserMemberships - empty memberships for githubUsername=${githubUsername}`);                                                    
+                                dydbItemPayload.githubOrgs = [];
+                            }
                         } else {
                             logger.error(`openid.js!promGithubUserMemberships - unxpected value; typeof valueMemberships=${typeof valueMemberships}, isArray=${Array.isArray(valueMemberships)}, valueMemberships=${inspect(valueMemberships)}`);
 

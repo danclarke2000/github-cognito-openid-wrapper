@@ -52,6 +52,8 @@ Globals:
           - SecretName
         Stage: !Ref MyDeployEnv
         DebugLevel: debug
+        DynameDbTableForGithubState: !Sub githubidpwrapper-${MyDeployEnv}-githubidpstate
+
     Tags:
         Project: !FindInMap [Tags, Global, ProjectId]
     
@@ -88,6 +90,25 @@ Parameters:
 #  COGNITO_REDIRECT_URI:
 
 Resources: 
+  DynamoDBTablegithubidpstate:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: !Sub githubidpwrapper-${MyDeployEnv}-githubidpstate
+      AttributeDefinitions: 
+        - AttributeName: githubUsername
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: githubUsername
+          KeyType: HASH
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Tags, Global, ProjectId]
+
   GithubOIDCWrapperSecret:
     Type: AWS::SecretsManager::Secret
     Properties: 
