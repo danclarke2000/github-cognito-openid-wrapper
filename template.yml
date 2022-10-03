@@ -19,7 +19,7 @@ Mappings:
       SubDomainForIdpGithubWrapper: 'idpgithubprd'
       NODEENV: 'production'
       ALBLOGINURL: 'https://apip.gitrospect.com/pubapi/login'
-      IDPURL: 'https://idpp.gitrospect.com/oauth2/idpresponse'
+      IDPURL: 'https://idpprd.gitrospect.com/oauth2/idpresponse'
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:

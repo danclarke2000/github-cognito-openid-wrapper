@@ -25,7 +25,8 @@
     "deploy": "bash ./scripts/deploy.sh",
     "coverage": "jest --runInBand --coverage",
     "snyk-protect": "snyk protect",
-    "prepare": "npm run snyk-protect"
+    "prepare": "npm run snyk-protect",
+    "build:deploy:prd": "sam build -t template.yml && sam deploy --config-env prd --no-confirm-changeset"
   },
   "author": "",
   "license": "ISC",
