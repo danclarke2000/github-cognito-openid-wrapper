@@ -1,0 +1,44 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
+stack_name = "github-cognito-openid-wrapper"
+s3_prefix = "github-cognito-openid-wrapper-default"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = ""
+image_repositories = []
+
+[prd]
+[prd.deploy]
+[prd.deploy.parameters]
+s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
+stack_name = "github-cognito-openid-wrapper-prd3"
+s3_prefix = "github-cognito-openid-wrapper-prd3"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "MyDeployEnv=\"prd\" GitHubUrlParameter=\"https://api.github.com\" GitHubLoginUrlParameter=\"https://github.com\" GithubCognitoWrapperLambdaRoleArn=\"arn:aws:iam::974150108946:role/GithubCognitoWrapperLambdaRole\" MyCertificateArnEUWest1=\"arn:aws:acm:eu-west-1:974150108946:certificate/3c965e22-db1c-4c24-b234-48dc385a2887\" MyCertificateArnUSEast1=\"arn:aws:acm:us-east-1:974150108946:certificate/ca4624c1-9a32-4627-9206-cd8ed45ad62e\" MyRoute53HostedZoneId=\"Z083683036YA6JAIJDMIA\" MyRoute53Domain=\"gitrospect.com\""
+image_repositories = []
+
+[stg]
+[stg.deploy]
+[stg.deploy.parameters]
+s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
+stack_name = "github-cognito-openid-wrapper-stg3"
+s3_prefix = "github-cognito-openid-wrapper-stg3"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "MyDeployEnv=\"stg\" GitHubUrlParameter=\"https://api.github.com\" GitHubLoginUrlParameter=\"https://github.com\" GithubCognitoWrapperLambdaRoleArn=\"arn:aws:iam::974150108946:role/GithubCognitoWrapperLambdaRole\" MyCertificateArnEUWest1=\"arn:aws:acm:eu-west-1:974150108946:certificate/3c965e22-db1c-4c24-b234-48dc385a2887\" MyCertificateArnUSEast1=\"arn:aws:acm:us-east-1:974150108946:certificate/ca4624c1-9a32-4627-9206-cd8ed45ad62e\" MyRoute53HostedZoneId=\"Z083683036YA6JAIJDMIA\" MyRoute53Domain=\"gitrospect.com\""
+image_repositories = []
+
+[koastg.deploy.parameters]
+stack_name = "github-cognito-openid-wrapper-stg3"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8mq8l7dr1730"
+s3_prefix = "github-cognito-openid-wrapper-stg3"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "MyDeployEnv=\"stg\" GitHubUrlParameter=\"https://api.github.com\" GitHubLoginUrlParameter=\"https://github.com\" GithubCognitoWrapperLambdaRoleArn=\"arn:aws:iam::740756988740:role/githubapp2LambdaroleCognitooidcwrapperforgithubStg\" MyCertificateArnEUWest1=\"arn:aws:acm:eu-west-1:740756988740:certificate/66cd269b-89d7-4a5e-9ac8-684e02115c50\" MyCertificateArnUSEast1=\"arn:aws:acm:us-east-1:740756988740:certificate/4911dbc9-cdc4-4133-8378-82f1df96c51c\" MyRoute53HostedZoneId=\"Z0106979236BNOKQNTXNO\" MyRoute53Domain=\"soc2tools.com\""
+image_repositories = []
+
+

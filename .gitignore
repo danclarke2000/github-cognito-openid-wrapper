@@ -6,7 +6,6 @@ dist-lambda
 logs
 .aws-sam
         
-samconfig.toml
 config.sh
 *.key
 *.key.pub
