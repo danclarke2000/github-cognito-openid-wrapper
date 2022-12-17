@@ -23,7 +23,7 @@ const getJwks = () => {
 const getUserInfo = (accessToken) =>
   Promise.all([
     github()
-      .getUserDetails(accessToken)
+      .getUserDetails(accessToken) 
       .then((userDetails) => {
         logger.debug('Fetched user details: %j', userDetails, {});
         // Here we map the github user response to the standard claims from
@@ -64,9 +64,11 @@ const getUserInfo = (accessToken) =>
       .getUserMembershipOrgs(accessToken)
       .then((userOrgs) => {
         logger.debug('Fetched user userOrgs: ' + JSON.stringify(userOrgs), {});
-        let mappedUserOrgs = userOrgs.map(el => el.organization.login)        
+        let mappedUserOrgs = userOrgs.map(el => el.organization.login)                
         const claims = {
-            "custom:userOrgs": JSON.stringify(mappedUserOrgs)
+            "custom:userOrgs": JSON.stringify(mappedUserOrgs),
+            // we have to encode the orgs into the address because cognito/alb doesnt allow a way to map custom claims
+            "address": JSON.stringify(mappedUserOrgs),
         };
         logger.debug('Resolved claims: %j', claims, {});
         return claims;
@@ -304,6 +306,7 @@ const getConfigFor = (host) => ({
     'iss',
     'aud',
     'custom:userOrgs',
+    'address'
   ],
 });
 
