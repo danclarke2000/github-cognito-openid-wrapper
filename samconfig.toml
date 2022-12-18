@@ -2,8 +2,8 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
+stack_name = "github-cognito-openid-wrapper-prd"
 s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
-stack_name = "github-cognito-openid-wrapper"
 s3_prefix = "github-cognito-openid-wrapper-default"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
@@ -13,8 +13,8 @@ image_repositories = []
 [prd]
 [prd.deploy]
 [prd.deploy.parameters]
-s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
 stack_name = "github-cognito-openid-wrapper-prd3"
+s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
 s3_prefix = "github-cognito-openid-wrapper-prd3"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
@@ -24,8 +24,8 @@ image_repositories = []
 [stg]
 [stg.deploy]
 [stg.deploy.parameters]
-s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
 stack_name = "github-cognito-openid-wrapper-stg3"
+s3_bucket = "aws-sam-cli-github-cognito-openid-wrapper2"
 s3_prefix = "github-cognito-openid-wrapper-stg3"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
