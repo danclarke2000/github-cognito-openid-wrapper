@@ -18,8 +18,8 @@ Mappings:
       SecretName: 'githubapp2cognitooidcwrapperforgithub/prd/oidcsecrets'
       SubDomainForIdpGithubWrapper: 'idpgithubprd'
       NODEENV: 'production'
-      ALBLOGINURL: 'https://githubapp2apip.gitrospect.com/pubapi/login'
-      IDPURL: 'https://githubapp2idpp.soc2tools.com/oauth2/idpresponse'
+      ALBLOGINURL: 'https://githubapp2apip.soc2tools.com/pubapi/login'
+      IDPURL: 'https://githubapp2idpp.auth.eu-west-1.amazoncognito.com/oauth2/idpresponse'
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -53,7 +53,8 @@ Globals:
         Stage: !Ref MyDeployEnv
         DebugLevel: debug
         DynameDbTableForGithubState: !Sub githubidpwrapper-${MyDeployEnv}-githubidpstate
-        
+        GHAPP_REQUIRED_ORG: "['koa-health']"
+
     Tags:
         Project: !FindInMap [Tags, Global, ProjectId]
     
@@ -223,11 +224,11 @@ Resources:
             Path: /githubpostauthcallback
             Method: get
             # RestApiId: !Ref GithubOAuthApi
-  AppTestFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ./dist-lambda
-      Role: !Ref GithubCognitoWrapperLambdaRoleArn
-      Handler: apptestfunction.handler
-      FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-apptestfunction
+  # AppTestFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: ./dist-lambda
+  #     Role: !Ref GithubCognitoWrapperLambdaRoleArn
+  #     Handler: apptestfunction.handler
+  #     FunctionName: !Sub githubidpwrapper-${MyDeployEnv}-apptestfunction
 

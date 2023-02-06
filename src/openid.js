@@ -145,7 +145,9 @@ const getTokens = (code, state, host) =>
                 "access_token":githubToken.access_token,
                 "access_token_expires_in":githubToken.expires_in,
                 "refresh_token":githubToken.refresh_token,
-                "refresh_token_expires_in":githubToken.refresh_token_expires_in
+                "refresh_token_expires_in":githubToken.refresh_token_expires_in,
+                "expired":false,
+                "expiredAt":null
             };
 
             return new Promise((resolve, reject) => {
@@ -161,11 +163,25 @@ const getTokens = (code, state, host) =>
                         if (Array.isArray(valueMemberships))
                         {
                             if (0 < valueMemberships.length) {
-                                dydbItemPayload.githubOrgs = valueMemberships.map(el => el.organization.login)
+                                dydbItemPayload.githubOrgs = valueMemberships.map(el => el.organization.login)                                
                             } else {
                                 logger.debug(`openid.js!promGithubUserMemberships - empty memberships for githubUsername=${githubUsername}`);                                                    
                                 dydbItemPayload.githubOrgs = [];
                             }
+
+                            let myRequiredOrgAsStr = process.env.GHAPP_REQUIRED_ORG;
+                            let myRequiredOrg = JSON.stringify(myRequiredOrgAsStr);
+                            if (Array.isArray(myRequiredOrg) && 0 < myRequiredOrg.length) {
+                              if (true == myRequiredOrg.some(el => dydbItemPayload.githubOrgs.includes(el))) {
+                                result.statusCode = 200;   
+                              } else {
+                                logger.debug(`openid.js!promGithubUserMemberships - githubOrgs does not contain=${myRequiredOrg}`);
+                                result.statusCode = 403;   
+                              }
+                            } else {
+                              result.statusCode = 200; 
+                            }
+
                         } else {
                             logger.error(`openid.js!promGithubUserMemberships - unxpected value; typeof valueMemberships=${typeof valueMemberships}, isArray=${Array.isArray(valueMemberships)}, valueMemberships=${inspect(valueMemberships)}`);
 
@@ -176,52 +192,57 @@ const getTokens = (code, state, host) =>
                             reject(result);
                         }
 
-                        let valueUserInfo = values[1].data;                        
-                        if ("string" == typeof valueUserInfo?.login) {
-                            logger.debug(`openid.js!promGithubUserDetails - value=${valueUserInfo.login}`);
-                            dydbItemPayload.githubUsername = valueUserInfo.login;
+                        if (200 == result.statusCode) {
+                            let valueUserInfo = values[1].data;                        
+                            if ("string" == typeof valueUserInfo?.login) {
+                                logger.debug(`openid.js!promGithubUserDetails - value=${valueUserInfo.login}`);
+                                dydbItemPayload.githubUsername = valueUserInfo.login;
+                            } else {
+                                logger.error(`openid.js!promGithubUserDetails - unxpected value= typeof valueUserInfo=${typeof valueUserInfo}`);                        
+
+                                let jsonObj = JSON.parse(valueUserInfo);
+                                logger.error(`openid.js!valueUserInfo - unxpected value; typeof jsonObj=${typeof jsonObj}, isArray=${Array.isArray(jsonObj)}, jsonObj=${inspect(jsonObj)}`);
+
+
+                                result.statusCode = 512;  
+                                reject(result);
+                            }
+
+                            let tableName = process.env.DynameDbTableForGithubState;
+                            if ("string" == typeof tableName && 0 < tableName.length
+                                && "string" == typeof dydbItemPayload.githubUsername && dydbItemPayload.githubUsername.length > 3)
+                            {
+                                let githubUsername = dydbItemPayload.githubUsername;
+                                let dydbItem = {
+                                    "TableName": tableName,
+                                    "Item" : dydbItemPayload
+                                }; 
+                                logger.debug(`openid.js!getTokens - Calling lambda2 with githubUsername=${githubUsername}, dydbItem=${JSON.stringify(dydbItem)}`);
+                                const ddbClient = new DynamoDBClient({ region: "eu-west-1" });
+                                const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
+                                ddbDocClient.send(new PutCommand(dydbItem)).then( (data) => {
+                                    result.statusCode = data?.$metadata?.httpStatusCode;
+                                    logger.debug(`updateGithubStateAfterAuthz!dynamodb.putItem ok githubUsername=${githubUsername}, result.statusCode=${result.statusCode}`);
+                                    resolve(tokenResponse);
+                                }, (error) => {
+                                    let errMsg = (error.message)? error.message : JSON.stringify(error);
+                                    let errStack = (error.stack)? error.stack : 'err stack not available';
+                                    logger.error(`updateGithubStateAfterAuthz!dynamodb.putItem error=${errMsg}, stack=${errStack}`);
+                                    result.statusCode = 503;  
+
+                                    // we resolve successfully even though we failed to update dynamodb
+                                    resolve(tokenResponse);
+                                });
+                            }
+                            else
+                            {
+                                logger.error(`updateGithubStateAfterAuthz!dynamodb.putItem event has no githubUsername or tableName; tableName=${tableName}, githubUsername=${githubUsername}`);
+                                result.statusCode = 502;  
+                                reject(result);
+                            }
                         } else {
-                            logger.error(`openid.js!promGithubUserDetails - unxpected value= typeof valueUserInfo=${typeof valueUserInfo}`);                        
-
-                            let jsonObj = JSON.parse(valueUserInfo);
-                            logger.error(`openid.js!valueUserInfo - unxpected value; typeof jsonObj=${typeof jsonObj}, isArray=${Array.isArray(jsonObj)}, jsonObj=${inspect(jsonObj)}`);
-
-
-                            result.statusCode = 512;  
-                            reject(result);
-                        }
-
-                        let tableName = process.env.DynameDbTableForGithubState;
-                        if ("string" == typeof tableName && 0 < tableName.length
-                            && "string" == typeof dydbItemPayload.githubUsername && dydbItemPayload.githubUsername.length > 3)
-                        {
-                            let githubUsername = dydbItemPayload.githubUsername;
-                            let dydbItem = {
-                                "TableName": tableName,
-                                "Item" : dydbItemPayload
-                            }; 
-                            logger.debug(`openid.js!getTokens - Calling lambda2 with githubUsername=${githubUsername}, dydbItem=${JSON.stringify(dydbItem)}`);
-                            const ddbClient = new DynamoDBClient({ region: "eu-west-1" });
-                            const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
-                            ddbDocClient.send(new PutCommand(dydbItem)).then( (data) => {
-                                result.statusCode = data?.$metadata?.httpStatusCode;
-                                logger.debug(`updateGithubStateAfterAuthz!dynamodb.putItem ok githubUsername=${githubUsername}, result.statusCode=${result.statusCode}`);
-                                resolve(tokenResponse);
-                            }, (error) => {
-                                let errMsg = (error.message)? error.message : JSON.stringify(error);
-                                let errStack = (error.stack)? error.stack : 'err stack not available';
-                                logger.error(`updateGithubStateAfterAuthz!dynamodb.putItem error=${errMsg}, stack=${errStack}`);
-                                result.statusCode = 503;  
-
-                                // we resolve successfully even though we failed to update dynamodb
-                                resolve(tokenResponse);
-                            });
-                        }
-                        else
-                        {
-                            logger.error(`updateGithubStateAfterAuthz!dynamodb.putItem event has no githubUsername or tableName; tableName=${tableName}, githubUsername=${githubUsername}`);
-                            result.statusCode = 502;  
-                            reject(result);
+                          // authZ failure
+                          reject(result);
                         }
                     } catch (error) {
                         let errMsg = (error.message)? error.message : JSON.stringify(error);

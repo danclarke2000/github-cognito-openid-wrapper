@@ -53,6 +53,7 @@ Globals:
         Stage: !Ref MyDeployEnv
         DebugLevel: debug
         DynameDbTableForGithubState: !Sub githubidpwrapper-${MyDeployEnv}-githubidpstate
+        GHAPP_REQUIRED_ORG: "[]"
 
     Tags:
         Project: !FindInMap [Tags, Global, ProjectId]

@@ -35,10 +35,18 @@ image_repositories = []
 [koastg.deploy.parameters]
 stack_name = "github-cognito-openid-wrapper-stg3"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8mq8l7dr1730"
-s3_prefix = "github-cognito-openid-wrapper-stg3"
+s3_prefix = "github-cognito-openid-wrapper-koastg"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "MyDeployEnv=\"stg\" GitHubUrlParameter=\"https://api.github.com\" GitHubLoginUrlParameter=\"https://github.com\" GithubCognitoWrapperLambdaRoleArn=\"arn:aws:iam::740756988740:role/githubapp2LambdaroleCognitooidcwrapperforgithubStg\" MyCertificateArnEUWest1=\"arn:aws:acm:eu-west-1:740756988740:certificate/66cd269b-89d7-4a5e-9ac8-684e02115c50\" MyCertificateArnUSEast1=\"arn:aws:acm:us-east-1:740756988740:certificate/4911dbc9-cdc4-4133-8378-82f1df96c51c\" MyRoute53HostedZoneId=\"Z0106979236BNOKQNTXNO\" MyRoute53Domain=\"soc2tools.com\""
 image_repositories = []
 
+[koaprd.deploy.parameters]
+stack_name = "github-cognito-openid-wrapper-prd"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8mq8l7dr1730"
+s3_prefix = "github-cognito-openid-wrapper-koaprd"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "MyDeployEnv=\"prd\" GitHubUrlParameter=\"https://api.github.com\" GitHubLoginUrlParameter=\"https://github.com\" GithubCognitoWrapperLambdaRoleArn=\"arn:aws:iam::740756988740:role/githubapp2LambdaroleCognitooidcwrapperforgithubPrd\" MyCertificateArnEUWest1=\"arn:aws:acm:eu-west-1:740756988740:certificate/66cd269b-89d7-4a5e-9ac8-684e02115c50\" MyCertificateArnUSEast1=\"arn:aws:acm:us-east-1:740756988740:certificate/4911dbc9-cdc4-4133-8378-82f1df96c51c\" MyRoute53HostedZoneId=\"Z0106979236BNOKQNTXNO\" MyRoute53Domain=\"soc2tools.com\""
+image_repositories = []
 

@@ -26,7 +26,9 @@
     "coverage": "jest --runInBand --coverage",
     "snyk-protect": "snyk protect",
     "prepare": "npm run snyk-protect",
-    "build:deploy:prd": "sam build -t template.yml && sam deploy --config-env prd --no-confirm-changeset"
+    "build:deploy:prdkoa": "sam build -t template-koa.yml && sam deploy --config-env koaprd --no-confirm-changeset",
+    "build:deploy:prd": "sam build -t template.yml && sam deploy --config-env prd --no-confirm-changeset",
+    "build:deploy:stg": "sam build -t template.yml && sam deploy --config-env stg --no-confirm-changeset"
   },
   "author": "",
   "license": "ISC",
